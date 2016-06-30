@@ -27,51 +27,63 @@ Za simulacijo zalednega sistema je uporabljen jQuery modul [Mockajax](https://gi
 
 ## Uporaba ##
 
-Pri nadgrajevanju statičnih prototipov v dinamične ponavadi še nimamo izdelanega zalednega sistema. Denimo, da si, za namen testiranja prototipa, pripravimo nekaj testnih podatkov v obliki JSON datotek
-
-```
-uporabniki1.json (1005kb)
-uporabniki2.json (250kb)
-uporabniki2.json (420kb)
-```
-
-Struktura JSON zapisa je v vseh datotekah (slika \ref{fig:testni_podatki}) enaka.
+Podatke, ki jih želimo prikazati v uporabniškem vmesniku, vedno pridobimo v neki v naprej določeni strukturi. Navadno gre za XML dokument ali pa JSON objekt. Zaradi enostavnosti se bomo osredotočili na JSON obliko zapisa podatkov. Enostaven primer JSON objekta je seznam uporabnikov:
 
 ```json
 [{
-	"ime": "Luka",	
-	"priimek": "Andrejak",
-	"status": 1,
-	"smer": "racunalniski sistemi",
-	"starost": 29
-}, ...]
+	"firstName": "Luka",	
+	"lastName": "Andrejak",	
+	"email": "luka.andrejak@gmail.com",
+	"status": 1
+},{
+	"firstName": "Janez",	
+	"email": "j.novak@gmail.com",
+	"lastName": "Novak",
+	"status": 1
+},{
+	"email": "doe.john@yahoo.com",
+	"firstName": "John",	
+	"lastName": "Doe",
+	"status": 0
+}]
 ```
 
-Podatke pridobimo z AJAX poizvedbo, za prikaz podatkov pa pripravimo HTML tabelo z razširjenimi podatkovnimi atributi
+Če hočemo podatke iz take strukture pravilno prikazati, moramo vedeti, v katerem HTML elementu naj določeni podatek prikažemo. HTML elemente enolično označimo z atributom `data-pt-name`. Za tabelaričen prikaz podatkov, bi pripravili HTML tabelo:
+
 
 ```html
-<table id="uporabniki">
+<table class="users">
 	<thead>
-		<tr>
-			<th data-pt-name="ime">Ime</th>
-			<th data-pt-name="priimek">Priimek</th>
-			<th data-pt-name="status" 
-				data-pt-choices="0:pavzer;1:dodiplomski;2:podiplomski">Status</th>
-			<th data-pt-name="smer">Smer</th>
-			<th data-pt-name="starost">Starost</th>
-		</tr>	
-	</thead>	
+		<th data-pt-name="firstName">Ime</th>
+		<th data-pt-name="lastName">Priimek</th>
+		<th data-pt-name="email">Email</th>
+		<th data-pt-name="status" 
+			data-pt-choices="1:aktiven,0:neaktiven">Status</th>
+	</thead>
+	
+	<tbody>	
+	</tbody>
 </table>
+```
 
+Imena stolpcev tabele se ujemajo s podatkovno strukturo JSON objekta, zato lahko vsako vrstico tabele ustrezno napolnimo s pravimi podatki. Posebnost je stolpec za prikaz statusa. V podatkovni strukturi je vrednost statusa lahko 0 ali 1. Iz vidika uporabniške izkušnje je predstavitev statusa uporabnika veliko boljša, če v polju piše \textit{aktiven} ali \textit{neaktiven}, kot 1 ali 0. Ta stolpec dodatno opremimo z atributom \textit{data-pt-choices}, ki definira preslikavo podatka. 
+
+Podatke prikažemo s klicem metode `pType.loadData()`:
+
+```javascript
 $.ajax({
-	url: "/vrni/uporabnike/",
+	url: "/uporabniki/seznam",
 	success: function (data) {
-		pType.loadData(
-			$('#users'), 
-			data			
-		);
+		pType.loadData($('table.users'), data);
 	}
 });
 ```
 
+ali pa HTML element, ki ga želimo napolniti s podatki, opremimo z atributom \textit{data-pt-source}. Vrednost atributa je URL naslov poizvedbe, ki bo priskrbela želene podatke. V tem primeru se bo metoda \textit{pType.loadData()} izvedla avtomatično.
+
+```html
+<table data-pt-source="/uporabniki/seznam">
+	...
+</table>
+```
 
