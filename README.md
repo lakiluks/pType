@@ -35,42 +35,43 @@ uporabniki2.json (250kb)
 uporabniki2.json (420kb)
 ```
 
-Za zajem podatkov simuliramo klic poizvedbe na zaledni sistem z uporabo modula Mockajax:
+Struktura JSON zapisa je v vseh datotekah (slika \ref{fig:testni_podatki}) enaka.
 
-```javascript
-$.mockjax({
-	url: "/vrni/uporabnike/*",
-	proxy: "/uporabniki1.json"
+```json
+[{
+	"ime": "Luka",	
+	"priimek": "Andrejak",
+	"status": 1,
+	"smer": "racunalniski sistemi",
+	"starost": 29
+}, ...]
+```
+
+Podatke pridobimo z AJAX poizvedbo, za prikaz podatkov pa pripravimo HTML tabelo z razširjenimi podatkovnimi atributi
+
+```html
+<table id="uporabniki">
+	<thead>
+		<tr>
+			<th data-pt-name="ime">Ime</th>
+			<th data-pt-name="priimek">Priimek</th>
+			<th data-pt-name="status" 
+				data-pt-choices="0:pavzer;1:dodiplomski;2:podiplomski">Status</th>
+			<th data-pt-name="smer">Smer</th>
+			<th data-pt-name="starost">Starost</th>
+		</tr>	
+	</thead>	
+</table>
+
+$.ajax({
+	url: "/vrni/uporabnike/",
+	success: function (data) {
+		pType.loadData(
+			$('#users'), 
+			data			
+		);
+	}
 });
 ```
 
-Ker je prikaz podatkov v uporabniškem vmesniku odvisen od količine zajetih podatkov, smo pripravili več datotek z različnimi količinami podatkov. Večja kot je datoteka, več podatkov vsebuje. Simulacijo zalednega sistema lahko nadgradimo tako, da datoteko s podatki izberemo naključno:
 
-```javascript
-$.mockjax({
-	url: "/vrni/uporabnike/*",
-	proxy: chance.pick(["uporabniki1.json",
-		"uporabniki2.json","uporabniki3.json"])
-});
-```
-
-Simulacijo naredimo bolj realno tako, da ji določimo časovno zakasnitev. Ker so datoteke različnih velikosti, morajo biti tudi zakasnitve različne. Z dodajanjem ustrezne zakasnitve primer \ref{randomDataProxy} nadgradimo:
-
-```javascript
-var mockData = chance.pickone[{
-	file: "uporabniki.json",
-	time: 1500
-}, {
-	file: "uporabniki2.json",
-	time: 200
-},{
-	file: "uporabniki3.json",
-	time: 800
-}];
-
-$.mockjax({
-	url: "/vrni/uporabnike/*",
-	proxy: mockData.file,
-	responseTime: mockData.time
-});
-```
