@@ -25,7 +25,7 @@ Za simulacijo zalednega sistema je uporabljen jQuery modul [Mockajax](https://gi
 </html>
 ```
 
-## Uporaba ##
+## Avtomatično vstavljanje podatkov v HTML ##
 
 Podatke, ki jih želimo prikazati v uporabniškem vmesniku, vedno pridobimo v neki v naprej določeni strukturi. Navadno gre za XML dokument ali pa JSON objekt. Zaradi enostavnosti se bomo osredotočili na JSON obliko zapisa podatkov. Enostaven primer JSON objekta je seznam uporabnikov:
 
@@ -87,3 +87,70 @@ ali pa HTML element, ki ga želimo napolniti s podatki, opremimo z atributom \te
 </table>
 ```
 
+## Generiranje naključnih podatkov ##
+
+Glavni izziv pri generiranju naključnih podatkov je v zmožnosti generiranja čim bolj realnih podatkov. Hitro lahko ugotovimo, da tabela, ki prikazuje seznam uporabnikov z naključnimi nizi, ki predstavljajo imena, priimke in email naslove, ni dovolj dober prototip. Modul pType za generiranje podatkov uporablja knjižnico Chance, ki zna poleg osnovnih tipov generirati naključne entitete kot so osebe, naslovi, mobilne naprave, spletni profili oseb ipd. Da poenostavimo uporabo knjižnice, moramo HTML elemente, ki jih  želimo napolniti z naključnimi podatki, opremiti z dodatnimi podatkovnimi atributi. Ti atributi modulu zagotovijo potrebne podatke za ustrezne klice Chance knjižnice.
+
+```html
+<input type="text" data-pt-randomize="true" data-pt-type="integer" />
+```
+
+Z atributom `data-pt-randomize` določimo element, ki bo vseboval naključne podatke. V zgornjem primeru želimo v vnosno polje vnesti naključno celo število. Tip podatka definiramo z atributom `data-pt-type`. Če želimo biti bolj natančni in generiran podatek podrobneje definirati, mu dodamo atribut data-pt-options`. Vrednost atributa je poenostavljen zapis JSON objekta, s katerim se kliče izbrano Chance metodo za generiranje podatka.
+
+```html
+<input type="text" dta-pt-randomize="true" data-pt-type="integer" data-pt-options="{min: 100, max: 1000}" 
+/>
+```
+
+Ko želimo prikazati eno izmed vrednosti v končni množici, uporabimo atribut `data-pt-choices`. Vrednost atributa je z znakom "," ločen seznam vseh možnih vrednosti:
+
+```html
+<input type="text" data-pt-randomize="true" data-pt-choices="modra,zelena,bela,rumena" />
+```
+
+### Generiranje podatkov za sestavljene HTML elemente ###
+
+Ko generiramo naključne podatke za kompleksnejše HTML elemente ali sestavljene strukture, moramo atribut `data-pt-randomize` določiti hierarhično najvišjemu elementu v strukturi. Za primer lahko vzamemo tabelo:
+
+```html
+<table data-pt-randomize="100">
+	<thead>
+		<tr>
+			<th data-pt-type="first">Ime</th>
+			<th data-pt-type="last">Priimek</th>
+			<th data-pt-type="gender">Spol</th>
+			<th data-pt-type="phone">Telefon</th>
+		</tr>	
+	</thead>
+	
+	<tbody>		
+	</tbody>
+</table>
+```
+ 
+Vrednost atributa \textit{data-pt-randomize} je v tem primeru število vrstic. Generiranje podatkov se izvede nekako takole:
+
+```javascript
+var data = [];
+for(var i = 0; i < 100; i++) {	
+	data.push([
+		chance.first(),
+		chance.last(),
+		chance.gender(),
+		chance.phone()
+	]);
+}
+```
+
+Pozoren bralec bo opazil, da ima zgornji primer za generiranje podatkov o uporabnikih pomanjkljivost. Generiranje podatkov posamezne osebe ne upošteva medsebojno odvisnih podatkov. Klica metod `chance.first()` in `chance.gender()` lahko vrneta nasprotujoča si podatka. Osebi z imenom Janez bi lahko določili ženski spol. Modul pType take situacije avtomatično prepozna in zagotovi usklajenost podatkov. Podobno se modul obnaša pri generiranju email naslovov in EMŠO številk. Pravilnejši prikaz generiranja podatkov:
+
+```javascript
+data = [];
+for(var i = 0; i < n; i++) {	
+	var spol = chance.gender();
+	data.push([
+		chance.first({ gender: spol }),
+		spol
+	]);
+}
+```
